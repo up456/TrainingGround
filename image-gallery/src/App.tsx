@@ -1,27 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import './App.css';
 import ImageBox from './components/ImageBox';
 
 function App() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<string[]>([]);
 
-  const onClickBtn = () => {
-    fileInputRef.current?.click();
-  };
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length) {
+      acceptedFiles.forEach((file: File) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
 
-  const onChangeFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = (event) => {
-        const imageUrl = event.target?.result as string;
-        setImages((prev) => [...prev, imageUrl]);
-      };
+        reader.onloadend = (event) => {
+          const imageUrl = event.target?.result as string;
+          setImages((prev) => [...prev, imageUrl]);
+        };
+      });
     }
-  };
+  }, []);
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   const deleteImage = (targetImage: string) => {
     setImages((prev) => {
@@ -46,15 +44,11 @@ function App() {
             ))}
           </div>
         )}
-        <input
-          onChange={onChangeFile}
-          type="file"
-          ref={fileInputRef}
-          style={{ display: 'none' }}
-        />
-        <button className="plus-btn" onClick={onClickBtn}>
+
+        <div className="plus-btn" {...getRootProps()}>
+          <input {...getInputProps()} type="file" style={{ display: 'none' }} />
           +
-        </button>
+        </div>
       </div>
     </div>
   );
